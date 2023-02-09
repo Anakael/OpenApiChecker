@@ -1,0 +1,22 @@
+root = true
+
+[*.cs]
+# scoped namespace
+dotnet_diagnostic.IDE0160.severity = none 
+# scoped method
+dotnet_diagnostic.IDE0022.severity = none
+# use the LoggerMessage delegates
+dotnet_diagnostic.CA1848.severity = none
+# static log message
+dotnet_diagnostic.CA2254.severity = none
+# unused value
+dotnet_diagnostic.IDE0058.severity = none
+# Using directives must be placed outside of a namespace declaration
+dotnet_diagnostic.IDE0065.severity = none 
+# Cultureinfo
+dotnet_diagnostic.CA1304.severity = none 
+dotnet_diagnostic.CA1311.severity = none 
+
+[*Tests.cs]
+# Remove the underscores from member name
+dotnet_diagnostic.CA1707.severity = none
