@@ -1,9 +1,12 @@
 namespace OpenApiChecker.Main;
 
 using SpecOperations = IDictionary<OperationType, OpenApiOperation>;
+using SpecProperties = IDictionary<string, OpenApiSchema>;
 
 public class SpecificationComparator
 {
+    private const string JsonApplication = "application/json";
+
     private readonly List<string> warnings = new();
     private readonly List<string> errors = new();
 
@@ -77,17 +80,82 @@ public class SpecificationComparator
     {
         foreach ((OperationType type, OpenApiOperation docOperation) in docOperations)
         {
-            Console.WriteLine($"Checking {path}");
-            if (!inputOperations.ContainsKey(type))
+            string typeDisplay = type.GetDisplayName().ToUpper();
+            Console.WriteLine($"Checking {typeDisplay} {path}");
+            if (!inputOperations.TryGetValue(type, out OpenApiOperation? inputOperation))
             {
-                string typeDisplay = type.GetDisplayName();
                 List<string> dest = options.NotImplemented.Contains($"{typeDisplay.ToLower()} {path}")
                     ? ref warnings
                     : ref errors;
-                dest.Add($"Missing {path} operation: {typeDisplay.ToUpper()}");
+                dest.Add($"Missing {path} operation: {typeDisplay}");
 
                 continue;
             }
+
+            string operationPath = $"{typeDisplay} {path}";
+
+            CompareParameters(operationPath, inputOperation.Parameters, docOperation.Parameters);
+            if (docOperation.RequestBody is null)
+            {
+                continue;
+            }
+
+            if (inputOperation.RequestBody is null)
+            {
+                errors.Add($"Missing {operationPath}: requestBody");
+                continue;
+            }
+
+            CompareRequestBodies(operationPath, inputOperation.RequestBody, docOperation.RequestBody);
         }
+    }
+
+    private void CompareRequestBodies(string path, OpenApiRequestBody inputBody, OpenApiRequestBody docBody)
+    {
+        Console.WriteLine($"Checking {path} requestBody");
+        if (!docBody.Content.TryGetValue(JsonApplication, out OpenApiMediaType? docMediaType))
+        {
+            return;
+        }
+
+        if (!inputBody.Content.TryGetValue(JsonApplication, out OpenApiMediaType? inputMediaType))
+        {
+            errors.Add($"Missing {JsonApplication} mediatype for {path}");
+            return;
+        }
+
+        OpenApiSchema inputSchema = inputMediaType.Schema;
+        OpenApiSchema docSchema = docMediaType.Schema;
+        CompareSchemas($"{path} body", inputSchema, docSchema);
+    }
+
+    private void CompareSchemas(string path, OpenApiSchema inputSchema, OpenApiSchema docSchema)
+    {
+        CompareTypes(path, inputSchema.Type, docSchema.Type);
+        switch (docSchema.Type)
+        {
+            case "array":
+                CompareSchemas($"{path} array", inputSchema.Items, docSchema.Items);
+                break;
+            case "object":
+                CompareProperties($"{path} object", inputSchema.Properties, docSchema.Properties);
+                break;
+            default:
+                throw new NotImplementedException();
+        };
+    }
+
+    private void CompareTypes(string path, string inputType, string docType)
+    {
+        if (inputType == docType)
+        {
+            return;
+        }
+
+        errors.Add($"{path}: has invalid {inputType} type. Expected: {docType}");
+    }
+
+    private void CompareProperties(string path, SpecProperties inputProperties, SpecProperties docProperties)
+    {
     }
 }

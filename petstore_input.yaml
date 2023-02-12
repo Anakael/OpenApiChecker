@@ -45,6 +45,19 @@ paths:
       operationId: createPets
       tags:
         - pets
+      requestBody:
+        description: Optional description in *Markdown*
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Bobic
       responses:
         '201':
           description: Null response
@@ -55,6 +68,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        description: The id of the pet to retrieve
+        schema:
+          type: string
+      - name: name
+        in: query
+        required: true
+        description: Pet name
+        schema:
+          type: string
     put:
       summary: Info for a specific pet
       operationId: showPetById
@@ -65,6 +91,12 @@ paths:
           in: path
           required: true
           description: The id of the pet to retrieve
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: true
+          description: Pet name
           schema:
             type: string
       responses:

@@ -45,6 +45,23 @@ paths:
       operationId: createPets
       tags:
         - pets
+      requestBody:
+        description: Optional description in *Markdown*
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - nickname
+              properties:
+                name:
+                  type: string
+                  example: Bobic
+                nickname:
+                  type: string
+                  example: Bob
       responses:
         '201':
           description: Null response
@@ -68,7 +85,7 @@ paths:
         description: Pet name
         schema:
           type: string
-    get:
+    put:
       summary: Info for a specific pet
       operationId: showPetById
       tags:
