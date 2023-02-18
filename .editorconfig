@@ -15,6 +15,7 @@ dotnet_diagnostic.IDE0058.severity = none
 dotnet_diagnostic.IDE0065.severity = none 
 # Cultureinfo
 dotnet_diagnostic.CA1304.severity = none 
+dotnet_diagnostic.CA1310.severity = none 
 dotnet_diagnostic.CA1311.severity = none 
 
 [*Tests.cs]

@@ -2,6 +2,7 @@ namespace OpenApiChecker.Main;
 
 using SpecOperations = IDictionary<OperationType, OpenApiOperation>;
 using SpecProperties = IDictionary<string, OpenApiSchema>;
+using SpecContents = IDictionary<string, OpenApiMediaType>;
 
 public class SpecificationComparator
 {
@@ -95,30 +96,44 @@ public class SpecificationComparator
             string operationPath = $"{typeDisplay} {path}";
 
             CompareParameters(operationPath, inputOperation.Parameters, docOperation.Parameters);
-            if (docOperation.RequestBody is null)
+            if (docOperation.RequestBody is not null)
             {
-                continue;
+                if (inputOperation.RequestBody is null)
+                {
+                    errors.Add($"Missing {operationPath}: requestBody");
+                    continue;
+                }
+
+                CompareRequestBodies(operationPath, inputOperation.RequestBody, docOperation.RequestBody);
             }
 
-            if (inputOperation.RequestBody is null)
+            if (docOperation.Responses is not null)
             {
-                errors.Add($"Missing {operationPath}: requestBody");
-                continue;
-            }
+                if (inputOperation.Responses is null)
+                {
+                    errors.Add($"Missing {operationPath}: responses");
+                    continue;
+                }
 
-            CompareRequestBodies(operationPath, inputOperation.RequestBody, docOperation.RequestBody);
+                CompareResponses($"{operationPath} responses", inputOperation.Responses, docOperation.Responses);
+            }
         }
     }
 
     private void CompareRequestBodies(string path, OpenApiRequestBody inputBody, OpenApiRequestBody docBody)
     {
         Console.WriteLine($"Checking {path} requestBody");
-        if (!docBody.Content.TryGetValue(JsonApplication, out OpenApiMediaType? docMediaType))
+        CompareContents($"{path} body", inputBody.Content, docBody.Content);
+    }
+
+    private void CompareContents(string path, SpecContents inputContents, SpecContents docContents)
+    {
+        if (!docContents.TryGetValue(JsonApplication, out OpenApiMediaType? docMediaType))
         {
             return;
         }
 
-        if (!inputBody.Content.TryGetValue(JsonApplication, out OpenApiMediaType? inputMediaType))
+        if (!inputContents.TryGetValue(JsonApplication, out OpenApiMediaType? inputMediaType))
         {
             errors.Add($"Missing {JsonApplication} mediatype for {path}");
             return;
@@ -126,7 +141,8 @@ public class SpecificationComparator
 
         OpenApiSchema inputSchema = inputMediaType.Schema;
         OpenApiSchema docSchema = docMediaType.Schema;
-        CompareSchemas($"{path} body", inputSchema, docSchema);
+        CompareSchemas(path, inputSchema, docSchema);
+
     }
 
     private void CompareSchemas(string path, OpenApiSchema inputSchema, OpenApiSchema docSchema)
@@ -140,8 +156,6 @@ public class SpecificationComparator
             case "object":
                 CompareProperties($"{path} object", inputSchema.Properties, docSchema.Properties);
                 break;
-            default:
-                throw new NotImplementedException();
         };
     }
 
@@ -157,5 +171,38 @@ public class SpecificationComparator
 
     private void CompareProperties(string path, SpecProperties inputProperties, SpecProperties docProperties)
     {
+        foreach ((string name, OpenApiSchema docSchema) in docProperties)
+        {
+            if (!inputProperties.TryGetValue(name, out OpenApiSchema? inputSchema))
+            {
+                errors.Add($"Missing {path} property: {name}");
+
+                continue;
+            }
+
+            CompareSchemas(path, inputSchema, docSchema);
+        }
+    }
+
+    private void CompareResponses(string path, OpenApiResponses inputResponses, OpenApiResponses docResponses)
+    {
+        Console.WriteLine($"Checking {path} responses");
+        foreach ((string code, OpenApiResponse docResponse) in docResponses)
+        {
+            if (!code.StartsWith("2"))
+            {
+                continue;
+            }
+
+            if (!inputResponses.TryGetValue(code, out OpenApiResponse? inputResponse))
+            {
+                errors.Add($"Missing {path} response: {code}");
+
+                continue;
+            }
+
+            Console.WriteLine($"Checking {path} {code}");
+            CompareContents($"{path} {code}", inputResponse.Content, docResponse.Content);
+        }
     }
 }
