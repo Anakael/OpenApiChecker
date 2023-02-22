@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0077E931-D88
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiChecker.Main", "src\OpenApiChecker.Main\OpenApiChecker.Main.csproj", "{2EFBDB8B-C889-44F7-8CDC-5F81EA04822B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{08FA44A2-F386-49A1-8399-FE4209ED9FDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiChecker.UnitTests", "tests\OpenApiChecker.UnitTests\OpenApiChecker.UnitTests.csproj", "{F89E208F-3CEE-4925-ADD2-44942B76C022}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +24,13 @@ Global
 		{2EFBDB8B-C889-44F7-8CDC-5F81EA04822B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EFBDB8B-C889-44F7-8CDC-5F81EA04822B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EFBDB8B-C889-44F7-8CDC-5F81EA04822B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F89E208F-3CEE-4925-ADD2-44942B76C022}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F89E208F-3CEE-4925-ADD2-44942B76C022}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F89E208F-3CEE-4925-ADD2-44942B76C022}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F89E208F-3CEE-4925-ADD2-44942B76C022}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2EFBDB8B-C889-44F7-8CDC-5F81EA04822B} = {0077E931-D883-473C-9FCE-8A9F02281038}
+		{F89E208F-3CEE-4925-ADD2-44942B76C022} = {08FA44A2-F386-49A1-8399-FE4209ED9FDF}
 	EndGlobalSection
 EndGlobal

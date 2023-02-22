@@ -5,4 +5,3 @@ global using Microsoft.OpenApi.Readers;
 global using OpenApiChecker.Main;
 global using OpenApiChecker.Main.Exceptions;
 global using OpenApiChecker.Main.Models;
-
