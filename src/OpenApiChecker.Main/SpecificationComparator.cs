@@ -59,7 +59,7 @@ public class SpecificationComparator
                 List<string> dest = options.NotImplemented.Contains(path)
                     ? ref warnings
                     : ref errors;
-                dest.Add($"Missing path {path} in input spec");
+                dest.Add($"Missing path {path}");
 
                 continue;
             }
