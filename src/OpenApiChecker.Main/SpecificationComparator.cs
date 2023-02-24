@@ -1,8 +1,8 @@
 namespace OpenApiChecker.Main;
 
+using SpecContents = IDictionary<string, OpenApiMediaType>;
 using SpecOperations = IDictionary<OperationType, OpenApiOperation>;
 using SpecProperties = IDictionary<string, OpenApiSchema>;
-using SpecContents = IDictionary<string, OpenApiMediaType>;
 
 public class SpecificationComparator
 {
@@ -46,8 +46,15 @@ public class SpecificationComparator
 
         foreach ((string path, OpenApiPathItem pathItem) in docPaths)
         {
+            string lowerPath = path.ToLower();
             Console.WriteLine($"Checking {path}");
-            if (!inputPathsKeys.Contains(path.ToLower()))
+            if (options.NotImplemented.Contains(lowerPath))
+            {
+                Console.WriteLine($"{path} is ignored");
+                continue;
+            }
+
+            if (!inputPathsKeys.Contains(lowerPath))
             {
                 List<string> dest = options.NotImplemented.Contains(path)
                     ? ref warnings
@@ -57,12 +64,16 @@ public class SpecificationComparator
                 continue;
             }
 
-            CompareParameters(path, inputPaths[path].Parameters, pathItem.Parameters);
-            CompareOperations(path, inputPaths[path].Operations, pathItem.Operations);
+            string inputPathKey = inputPaths.Keys.First(x => x.ToLower() == lowerPath);
+
+            CompareOperations(path, inputPaths[inputPathKey].Operations, pathItem.Operations, pathItem.Parameters);
         }
     }
 
-    private void CompareParameters(string path, IEnumerable<OpenApiParameter> inputParameters, IEnumerable<OpenApiParameter> docParameters)
+    private void CompareParameters(
+            string path,
+            IEnumerable<OpenApiParameter> inputParameters,
+            IEnumerable<OpenApiParameter> docParameters)
     {
         foreach (OpenApiParameter docParam in docParameters)
         {
@@ -77,7 +88,11 @@ public class SpecificationComparator
         }
     }
 
-    private void CompareOperations(string path, SpecOperations inputOperations, SpecOperations docOperations)
+    private void CompareOperations(
+            string path,
+            SpecOperations inputOperations,
+            SpecOperations docOperations,
+            IList<OpenApiParameter> pathParams)
     {
         foreach ((OperationType type, OpenApiOperation docOperation) in docOperations)
         {
@@ -94,8 +109,7 @@ public class SpecificationComparator
             }
 
             string operationPath = $"{typeDisplay} {path}";
-
-            CompareParameters(operationPath, inputOperation.Parameters, docOperation.Parameters);
+            CompareParameters(operationPath, inputOperation.Parameters, docOperation.Parameters.Concat(pathParams));
             if (docOperation.RequestBody is not null)
             {
                 if (inputOperation.RequestBody is null)
@@ -148,20 +162,29 @@ public class SpecificationComparator
     private void CompareSchemas(string path, OpenApiSchema inputSchema, OpenApiSchema docSchema)
     {
         CompareTypes(path, inputSchema.Type, docSchema.Type);
+        // TODO: Compare allOf
+
         switch (docSchema.Type)
         {
             case "array":
-                CompareSchemas($"{path} array", inputSchema.Items, docSchema.Items);
+                CompareSchemas($"{path} -> array", inputSchema.Items, docSchema.Items);
                 break;
             case "object":
-                CompareProperties($"{path} object", inputSchema.Properties, docSchema.Properties);
+                string? schemaTitle = docSchema.Title ?? docSchema.Reference?.Id;
+                string schemaPath = !string.IsNullOrEmpty(schemaTitle) ? $"{path} -> {schemaTitle}" : path;
+                CompareProperties(schemaPath, inputSchema.Properties, docSchema.Properties);
                 break;
         };
     }
 
     private void CompareTypes(string path, string inputType, string docType)
     {
-        if (inputType == docType)
+        if (string.IsNullOrEmpty(docType))
+        {
+            return;
+        }
+
+        if (inputType == docType || docType == "number" && inputType == "integer")
         {
             return;
         }
@@ -180,7 +203,7 @@ public class SpecificationComparator
                 continue;
             }
 
-            CompareSchemas(path, inputSchema, docSchema);
+            CompareSchemas($"{path} -> {name}", inputSchema, docSchema);
         }
     }
 

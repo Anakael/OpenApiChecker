@@ -1,5 +1,3 @@
 namespace OpenApiChecker.Main.Models;
 
-public record CompareOptions(
-        IEnumerable<string> NotImplemented
-        );
+public record CompareOptions(HashSet<string> NotImplemented);

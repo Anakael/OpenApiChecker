@@ -16,7 +16,11 @@ static int Run(Options opts)
         return 1;
     }
 
-    CompareOptions compareOptions = new(Enumerable.Empty<string>().Select(x => x.ToLower()));
+    string[] ignore = string.IsNullOrEmpty(opts.NotImplemented)
+        ? Enumerable.Empty<string>().ToArray()
+        : File.ReadAllLines(opts.NotImplemented);
+
+    CompareOptions compareOptions = new(ignore.Select(x => x.ToLower()).ToHashSet());
     SpecificationComparator comparator = new(compareOptions);
     (IEnumerable<string> warnings, IEnumerable<string> errors) = comparator.Compare(inputSpec, docSpec);
 
