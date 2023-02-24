@@ -50,7 +50,7 @@ public class SpecificationComparator
             Console.WriteLine($"Checking {path}");
             if (options.NotImplemented.Contains(lowerPath))
             {
-                Console.WriteLine($"{path} is ignored");
+                warnings.Add($"{path} is not implemented");
                 continue;
             }
 
@@ -162,7 +162,10 @@ public class SpecificationComparator
     private void CompareSchemas(string path, OpenApiSchema inputSchema, OpenApiSchema docSchema)
     {
         CompareTypes(path, inputSchema.Type, docSchema.Type);
-        // TODO: Compare allOf
+        if (string.IsNullOrEmpty(docSchema.Type))
+        {
+            warnings.Add($"{path} can not be parsed as AnyOf, OneOf, AllOf is not supported");
+        }
 
         switch (docSchema.Type)
         {
